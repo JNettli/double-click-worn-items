@@ -16,7 +16,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 @PluginDescriptor(
         name = "Double-Click Deposit Worn Items",
         description = "Requires double-click to deposit worn items in the bank within the timed visual overlay",
-        tags = {"bank", "safety", "deposit"}
+        tags = {"bank", "safety", "deposit", "qol"}
 )
 public class DoubleDepositPlugin extends Plugin
 {
