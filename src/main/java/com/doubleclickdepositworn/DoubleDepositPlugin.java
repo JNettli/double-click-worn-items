@@ -1,12 +1,14 @@
 package com.doubleclickdepositworn;
 
-import com.google.inject.Provides;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
+import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.MenuAction;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.widgets.InterfaceID;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -26,6 +28,7 @@ public class DoubleDepositPlugin extends Plugin
     @Inject
     private OverlayManager overlayManager;
 
+    @Getter
     @Inject
     private DoubleDepositConfig config;
 
@@ -40,14 +43,14 @@ public class DoubleDepositPlugin extends Plugin
     }
 
     @Override
-    protected void startUp() throws Exception
+    protected void startUp()
     {
         overlay = new DoubleDepositOverlay(client, this);
         overlayManager.add(overlay);
     }
 
     @Override
-    protected void shutDown() throws Exception
+    protected void shutDown()
     {
         overlayManager.remove(overlay);
         overlay = null;
@@ -58,15 +61,25 @@ public class DoubleDepositPlugin extends Plugin
     public void onMenuOptionClicked(MenuOptionClicked event)
     {
         if (event.getMenuAction() != MenuAction.CC_OP)
+        {
             return;
+        }
 
         Widget clicked = event.getWidget();
         if (clicked == null)
+        {
             return;
+        }
 
-        Widget depositWidget = client.getWidget(WidgetInfo.BANK_DEPOSIT_EQUIPMENT);
+        Widget depositWidget = client.getWidget(
+                InterfaceID.BANK,
+                ComponentID.BANK_DEPOSIT_EQUIPMENT
+        );
+
         if (depositWidget == null || clicked != depositWidget)
+        {
             return;
+        }
 
         long now = System.currentTimeMillis();
 
@@ -77,31 +90,29 @@ public class DoubleDepositPlugin extends Plugin
             return;
         }
 
+        // Second click accepted
         lastClickTime = 0;
     }
 
     public boolean isWaitingForSecondClick()
     {
-        return lastClickTime > 0 && (System.currentTimeMillis() - lastClickTime <= config.cooldownMillis());
+        return lastClickTime > 0
+                && System.currentTimeMillis() - lastClickTime <= config.cooldownMillis();
     }
 
     public double getProgress()
     {
         if (!isWaitingForSecondClick())
+        {
             return 0.0;
+        }
 
         long elapsed = System.currentTimeMillis() - lastClickTime;
         return Math.min(1.0, (double) elapsed / config.cooldownMillis());
-    }
-
-    public DoubleDepositConfig getConfig()
-    {
-        return config;
     }
 
     public int getOverlayOpacity()
     {
         return config.overlayOpacity();
     }
-
 }
