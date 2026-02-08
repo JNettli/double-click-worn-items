@@ -3,7 +3,7 @@ package com.doubleclickdepositworn;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.WidgetInfo;
+import net.runelite.api.widgets.InterfaceID;  // Updated: Use InterfaceID instead of ComponentID
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -33,7 +33,7 @@ public class DoubleDepositOverlay extends Overlay
             return null;
         }
 
-        Widget widget = client.getWidget(WidgetInfo.BANK_DEPOSIT_EQUIPMENT);
+        Widget widget = client.getWidget(InterfaceID.BANK, 44);
         if (widget == null || widget.isHidden())
         {
             return null;
@@ -50,6 +50,8 @@ public class DoubleDepositOverlay extends Overlay
 
         int centerX = location.getX() + width / 2;
         int centerY = location.getY() + height / 2;
+
+        centerY -= 5;
 
         graphics.setColor(new Color(0, 0, 0, 50));
         graphics.fillOval(centerX - width / 2, centerY - height / 2, width, height);
