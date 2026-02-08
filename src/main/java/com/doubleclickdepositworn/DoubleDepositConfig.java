@@ -21,7 +21,7 @@ public interface DoubleDepositConfig extends Config
 
     @ConfigItem(
             keyName = "overlayOpacity",
-            name = "Overlay opacity",
+            name = "Overlay opacity (0-255)",
             description = "Opacity of the circular overlay (0-255)"
     )
     default int overlayOpacity()

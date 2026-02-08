@@ -1,14 +1,11 @@
 package com.doubleclickdepositworn;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
 import com.google.inject.Provides;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.MenuAction;
 import net.runelite.api.events.MenuOptionClicked;
-import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.ComponentID;
-import net.runelite.api.widgets.InterfaceID;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -36,6 +33,8 @@ public class DoubleDepositPlugin extends Plugin
 
     private long lastClickTime = 0;
 
+    private long overlayStartTime = 0;
+
     @Provides
     DoubleDepositConfig provideConfig(ConfigManager configManager)
     {
@@ -55,28 +54,18 @@ public class DoubleDepositPlugin extends Plugin
         overlayManager.remove(overlay);
         overlay = null;
         lastClickTime = 0;
+        overlayStartTime = 0;
     }
 
     @Subscribe
     public void onMenuOptionClicked(MenuOptionClicked event)
     {
+        if (!"Deposit worn items".equals(event.getMenuOption()))
+        {
+            return;
+        }
+
         if (event.getMenuAction() != MenuAction.CC_OP)
-        {
-            return;
-        }
-
-        Widget clicked = event.getWidget();
-        if (clicked == null)
-        {
-            return;
-        }
-
-        Widget depositWidget = client.getWidget(
-                InterfaceID.BANK,
-                ComponentID.BANK_DEPOSIT_EQUIPMENT
-        );
-
-        if (depositWidget == null || clicked != depositWidget)
         {
             return;
         }
@@ -87,27 +76,27 @@ public class DoubleDepositPlugin extends Plugin
         {
             event.consume();
             lastClickTime = now;
+            overlayStartTime = now;
             return;
         }
 
-        // Second click accepted
         lastClickTime = 0;
+        overlayStartTime = 0;
     }
 
-    public boolean isWaitingForSecondClick()
+    public boolean isOverlayVisible()
     {
-        return lastClickTime > 0
-                && System.currentTimeMillis() - lastClickTime <= config.cooldownMillis();
+        return overlayStartTime > 0 &&
+                System.currentTimeMillis() - overlayStartTime <= config.cooldownMillis();
     }
 
     public double getProgress()
     {
-        if (!isWaitingForSecondClick())
+        if (!isOverlayVisible())
         {
             return 0.0;
         }
-
-        long elapsed = System.currentTimeMillis() - lastClickTime;
+        long elapsed = System.currentTimeMillis() - overlayStartTime;
         return Math.min(1.0, (double) elapsed / config.cooldownMillis());
     }
 
