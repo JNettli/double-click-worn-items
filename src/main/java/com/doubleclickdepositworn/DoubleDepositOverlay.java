@@ -1,9 +1,9 @@
 package com.doubleclickdepositworn;
 
 import javax.inject.Inject;
+
 import net.runelite.api.Client;
 import net.runelite.api.widgets.Widget;
-import net.runelite.api.widgets.InterfaceID;  // Updated: Use InterfaceID instead of ComponentID
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -20,6 +20,7 @@ public class DoubleDepositOverlay extends Overlay
     {
         this.client = client;
         this.plugin = plugin;
+
         setPosition(OverlayPosition.DYNAMIC);
         setLayer(OverlayLayer.ABOVE_WIDGETS);
         setPriority(1000.0F);
@@ -33,37 +34,43 @@ public class DoubleDepositOverlay extends Overlay
             return null;
         }
 
-        Widget widget = client.getWidget(InterfaceID.BANK, 44);
-        if (widget == null || widget.isHidden())
+        Widget widget = plugin.getLastDepositWornWidget();
+        if (widget == null)
         {
             return null;
         }
 
-        net.runelite.api.Point location = widget.getCanvasLocation();
-        if (location == null)
+        Rectangle bounds = widget.getBounds();
+        if (bounds == null)
         {
             return null;
         }
 
-        int width = Math.max(widget.getWidth(), 32);
-        int height = Math.max(widget.getHeight(), 32);
+        int centerX = bounds.x + bounds.width / 2;
 
-        int centerX = location.getX() + width / 2;
-        int centerY = location.getY() + height / 2;
+        int centerY = bounds.y + bounds.height / 2;
 
-        centerY -= 5;
+        int size = (int) (Math.min(bounds.width, bounds.height) * 0.9);
 
         graphics.setColor(new Color(0, 0, 0, 50));
-        graphics.fillOval(centerX - width / 2, centerY - height / 2, width, height);
+        graphics.fillOval(centerX - size / 2, centerY - size / 2, size, size);
 
-        Color baseColor = plugin.getConfig().progressBarColor();
+        Color c = plugin.getConfig().progressBarColor();
         int alpha = plugin.getOverlayOpacity();
-        graphics.setColor(new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), alpha));
+
+        graphics.setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), alpha));
 
         double progress = plugin.getProgress();
-        int startAngle = 90;
-        int arcAngle = -(int) (360 * progress);
-        graphics.fillArc(centerX - width / 2, centerY - height / 2, width, height, startAngle, arcAngle);
+        int arc = -(int) (360 * progress);
+
+        graphics.fillArc(
+                centerX - size / 2,
+                centerY - size / 2,
+                size,
+                size,
+                90,
+                arc
+        );
 
         return null;
     }

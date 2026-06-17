@@ -1,11 +1,13 @@
 package com.doubleclickdepositworn;
 
 import javax.inject.Inject;
+
 import com.google.inject.Provides;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.MenuAction;
 import net.runelite.api.events.MenuOptionClicked;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
@@ -32,8 +34,9 @@ public class DoubleDepositPlugin extends Plugin
     private DoubleDepositOverlay overlay;
 
     private long lastClickTime = 0;
-
     private long overlayStartTime = 0;
+
+    private Widget lastDepositWornWidget;
 
     @Provides
     DoubleDepositConfig provideConfig(ConfigManager configManager)
@@ -53,8 +56,10 @@ public class DoubleDepositPlugin extends Plugin
     {
         overlayManager.remove(overlay);
         overlay = null;
+
         lastClickTime = 0;
         overlayStartTime = 0;
+        lastDepositWornWidget = null;
     }
 
     @Subscribe
@@ -68,6 +73,12 @@ public class DoubleDepositPlugin extends Plugin
         if (event.getMenuAction() != MenuAction.CC_OP)
         {
             return;
+        }
+
+        Widget w = event.getWidget();
+        if (w != null)
+        {
+            lastDepositWornWidget = w;
         }
 
         long now = System.currentTimeMillis();
@@ -96,6 +107,7 @@ public class DoubleDepositPlugin extends Plugin
         {
             return 0.0;
         }
+
         long elapsed = System.currentTimeMillis() - overlayStartTime;
         return Math.min(1.0, (double) elapsed / config.cooldownMillis());
     }
@@ -103,5 +115,10 @@ public class DoubleDepositPlugin extends Plugin
     public int getOverlayOpacity()
     {
         return config.overlayOpacity();
+    }
+
+    public Widget getLastDepositWornWidget()
+    {
+        return lastDepositWornWidget;
     }
 }
